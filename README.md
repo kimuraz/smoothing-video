@@ -1,5 +1,11 @@
 # smoothing-video
 
+Experimenting with smoothing video with OpenCV.js.
+
+## Next steps:
+- Implement Opencv.js beautify filter
+- Check errors when adjusting changing pixel radius
+
 ## Project setup
 ```
 yarn install
@@ -19,6 +25,3 @@ yarn build
 ```
 yarn lint
 ```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
