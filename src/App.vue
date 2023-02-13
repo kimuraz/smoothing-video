@@ -11,6 +11,11 @@
       </div>
 
       <div class="group">
+        <p>OpenCV Median blur only on face (ksize: {{ ksize }})</p>
+        <canvas ref="canvasRef" style="height: 240px; width: 320px" />
+      </div>
+
+      <div class="group">
         <p>OpenCV Median blur (ksize: {{ ksize }})</p>
         <canvas ref="canvasRef2" style="height: 240px; width: 320px" />
 
@@ -36,6 +41,7 @@ import { onMounted, Ref, ref } from "vue";
 import cv from "@techstark/opencv-js";
 
 const videoRef: Ref<HTMLVideoElement | null> = ref(null);
+const canvasRef: Ref<HTMLCanvasElement | null> = ref(null);
 const canvasRef2: Ref<HTMLCanvasElement | null> = ref(null);
 const canvasRef3: Ref<HTMLCanvasElement | null> = ref(null);
 const interval: any = ref(null);
@@ -58,10 +64,12 @@ const startOpenCV = async () => {
   const height = videoEl.videoHeight;
   videoEl.width = width;
   videoEl.height = height;
+  const resultCanvasEl = canvasRef.value;
   const medianCanvasEl = canvasRef2.value;
   const faceCanvasEl = canvasRef3.value;
 
   const src = new cv.Mat(height, width, cv.CV_8UC4);
+  const resultDst = new cv.Mat(height, width, cv.CV_8UC4);
   const medianDst = new cv.Mat(height, width, cv.CV_8UC1);
   const faceDst = new cv.Mat(height, width, cv.CV_8UC4);
   const gray = new cv.Mat();
@@ -75,7 +83,7 @@ const startOpenCV = async () => {
   // Processing images
   interval.value = setInterval(() => {
     try {
-      if (!medianCanvasEl || !faceCanvasEl) {
+      if (!medianCanvasEl || !faceCanvasEl || !resultCanvasEl) {
         return;
       }
 
@@ -98,14 +106,26 @@ const startOpenCV = async () => {
 
       // Face recognition
       src.copyTo(faceDst);
+      src.copyTo(resultDst);
       cv.cvtColor(faceDst, gray, cv.COLOR_RGBA2GRAY, 0);
       // Detect faces
       classifier.detectMultiScale(gray, faces, 1.1, 3, 0);
       for (let i = 0; i < faces.size(); ++i) {
-        let face = faces.get(i);
-        let point1 = new cv.Point(face.x, face.y);
-        let point2 = new cv.Point(face.x + face.width, face.y + face.height);
-        cv.rectangle(faceDst, point1, point2, [255, 0, 0, 255]);
+        const face = faces.get(i);
+        const center = new cv.Point(
+          face.x + face.width / 2,
+          face.y + face.height / 2
+        );
+        cv.ellipse(
+          faceDst,
+          center,
+          new cv.Size(face.width / 2, face.height / 2),
+          0,
+          0,
+          360,
+          [255, 255, 0, 255],
+          4
+        );
       }
       cv.imshow(faceCanvasEl, faceDst);
     } catch (err) {
