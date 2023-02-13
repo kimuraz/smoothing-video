@@ -10,29 +10,25 @@
         ></video>
       </div>
 
-      <div class="group">
-        <p>OpenCV Bilateral Filter</p>
-        <canvas ref="canvasRef" style="height: 240px; width: 320px" />
-        <br />
-        <input
-          type="range"
-          v-model.number="openCVPixelRadius"
-          min="1"
-          max="7"
-        />
-      </div>
+      <template v-if="interval">
+        <div class="group">
+          <p>OpenCV Bilateral Filter</p>
+          <canvas ref="canvasRef" style="height: 240px; width: 320px" />
+        </div>
 
-      <div class="group">
-        <p>OpenCV Median blur</p>
-        <canvas ref="canvasRef2" style="height: 240px; width: 320px" />
-        <br />
-        <input
-          type="range"
-          v-model.number="openCVPixelRadius"
-          min="1"
-          max="7"
-        />
-      </div>
+        <div class="group">
+          <p>OpenCV Median blur (ksize: {{ ksize }})</p>
+          <canvas ref="canvasRef2" style="height: 240px; width: 320px" />
+
+          <input
+            type="range"
+            v-model.number="ksize"
+            min="1"
+            max="15"
+            step="2"
+          />
+        </div>
+      </template>
     </div>
     <br />
     <button @click="interval ? stopOpenCV() : startOpenCV()">
@@ -48,8 +44,8 @@ import cv from "@techstark/opencv-js";
 const videoRef: Ref<HTMLVideoElement | null> = ref(null);
 const canvasRef: Ref<HTMLCanvasElement | null> = ref(null);
 const canvasRef2: Ref<HTMLCanvasElement | null> = ref(null);
-const openCVPixelRadius = ref(5);
 const interval: any = ref(null);
+const ksize: Ref<number> = ref(5);
 
 const stopOpenCV = () => {
   if (interval.value) {
@@ -59,7 +55,7 @@ const stopOpenCV = () => {
 };
 
 const startOpenCV = () => {
-  const FPS = 30;
+  const FPS = 60;
   interval.value = setInterval(() => {
     const videoEl = videoRef.value;
     const canvasEl = canvasRef.value;
@@ -87,15 +83,8 @@ const startOpenCV = () => {
 
     cap.read(src);
     cv.cvtColor(src, src, cv.COLOR_RGBA2RGB, 0);
-    cv.bilateralFilter(
-      src,
-      blurDst,
-      openCVPixelRadius.value,
-      50,
-      50,
-      cv.BORDER_DEFAULT
-    );
-    cv.medianBlur(src, medianDst, openCVPixelRadius.value);
+    cv.bilateralFilter(src, blurDst, 6, 50, 50, cv.BORDER_DEFAULT);
+    cv.medianBlur(src, medianDst, ksize.value);
     cv.imshow(canvasEl, blurDst);
     cv.imshow(medianCanvasEl, medianDst);
     src.delete();
